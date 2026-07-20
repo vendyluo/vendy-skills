@@ -1,10 +1,10 @@
 # Vendy Skills
 
-一組貼合我工作方式的 agent skills。它們從 [tw93/Waza](https://github.com/tw93/Waza) 衍生，經過重新整理後，只保留能跨專案重用的工程判斷與工作方法。
+一組貼合我工作方式的 agent skills。八個通用 workflow skills 從 [tw93/Waza](https://github.com/tw93/Waza) 衍生，經過重新整理後，只保留能跨專案重用的工程判斷與工作方法；Amp Orb skills 則保存遠端委派與獨立驗證的原則，Amp CLI adapter 維持實驗性。
 
 核心很簡單：先解決真實問題，以證據做判斷，選擇最小足夠且完整的做法，不為抽象、文件或流程本身增加複雜度。完整原則見 [PROFILE.md](PROFILE.md)，英文版見 [PROFILE.en.md](PROFILE.en.md)。
 
-## Skills
+## 通用 Skills
 
 - `think`：收斂需求、架構與價值判斷。
 - `hunt`：從可重現證據找到 root cause，再完成足夠且完整的修正。
@@ -14,6 +14,13 @@
 - `learn`：多來源研究、理解與可發布整理。
 - `write`：中英文改寫、本地化與去 AI 味。
 - `health`：檢查 agent instructions、hooks、MCP、verifier 與 AI maintainability。
+
+## Amp Orb Skills（Experimental）
+
+這兩個 skills 的工作原則穩定，但依賴 Amp CLI 的整合仍可能隨 runtime 演進：
+
+- `amp-orb-delegate`：判斷工作是否適合 Orb，並以成本、repository state、concurrency 與 handoff guards 安全委派。
+- `amp-orb-verify`：從 delegation record、thread、Git refs 與可重現命令獨立驗證 Orb 結果。
 
 ## 邊界
 
