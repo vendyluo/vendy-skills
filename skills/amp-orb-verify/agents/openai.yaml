@@ -1,0 +1,4 @@
+interface:
+  display_name: "Amp Orb Verify"
+  short_description: "Independently verify an Amp Orb delegation"
+  default_prompt: "Use $amp-orb-verify to collect and independently verify evidence from an Amp Orb delegation."
