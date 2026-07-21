@@ -1,8 +1,6 @@
 ---
 name: health
 description: "Runs a budget-aware agent-assisted engineering health audit for instruction/config drift, hooks/MCP, verifier surfaces, and AI maintainability. Use when users ask in any language to audit Claude, Codex, Pi, agent instructions, MCP or hooks, verifier coverage, or AI-maintainability drift. Not for debugging application code or reviewing PRs."
-when_to_use: "檢查claude, 檢查codex, 檢查pi, Codex 配置, Pi 配置, AGENTS.md, config.toml, agent instructions, 健康度, 配置檢查, 配置對不對, AI coding 腐化, 程式碼變爛, 維護性, 上下文混亂, 驗證缺失, 驗證命令失真, Claude ignoring instructions, Pi coding agent, check config, settings not working, audit config"
-dispatch_intent: "Codex/Claude/Pi ignoring instructions, agent config audit, hooks/MCP broken, health token usage, AI coding code rot, hotspot ownership, unclear context, missing verification, stale verifier output"
 ---
 
 # Health: Agent-Assisted Engineering Health
@@ -49,21 +47,10 @@ File count, personal/company labels, and number of installed skills do not deter
 ## Step 1: Collect data
 
 Run the collection script in summary mode first. Do not interpret yet.
+Replace `<skill-base-dir>` with the base directory reported by the runtime when this skill loads.
 
 ```bash
-# Resolve collect-data.sh from this skill's installed or repository layout.
-HEALTH_SCRIPT="${CLAUDE_SKILL_DIR:+$CLAUDE_SKILL_DIR/scripts/collect-data.sh}"
-if [ ! -f "${HEALTH_SCRIPT:-}" ]; then
-  for candidate in \
-    "./skills/health/scripts/collect-data.sh" \
-    "./scripts/collect-data.sh"; do
-    [ -f "$candidate" ] && HEALTH_SCRIPT="$candidate" && break
-  done
-fi
-if [ ! -f "${HEALTH_SCRIPT:-}" ]; then
-  echo "health collect-data.sh not found; set CLAUDE_SKILL_DIR or run from the installed skill or repository root"
-  exit 1
-fi
+HEALTH_SCRIPT="<skill-base-dir>/scripts/collect-data.sh"
 bash "$HEALTH_SCRIPT"
 ```
 
@@ -167,6 +154,8 @@ Instruction/config drift, broken verifier surfaces, materially wasteful MCP or c
 
 Agent instructions in the wrong layer, absent enforcement for a demonstrated repeated deterministic failure, descriptions that cause concrete misrouting or material context displacement, and verifier gaps.
 
+**Behavioral wiring changes.** When routing, bootstrap, skill discovery, hook injection, or compaction reinjection behavior changes, static validation, YAML parsing, and registration tests prove only structural integrity. Run a clean session in the affected runtime and observe the intended trigger or reinjection; until then report that behavior as `UNVERIFIED`, exclude it from passing checks, and do not issue a clean bill of health.
+
 **Codex/Claude/Pi instruction drift.** Use `AGENT CONFIG SUMMARY` first. Report a Structural finding when `AGENTS.md` and runtime-specific files contain conflicting substantial guidance without clear delegation, when Codex trust or Pi skill roots are misconfigured, when runtime-specific instructions contradict the shared project source of truth, or when observed collaboration or repeated-agent failures show a missing project instruction surface. Absence alone is informational. Also report when important distributed rules live only in ignored overlays; private overlays can inform an audit but are not durable project truth. Do not print raw config values. Secrets, tokens, keys, and passwords appear only as `[REDACTED]`.
 
 Quick check from the project root, reusing `$HEALTH_SCRIPT` resolved in Step 1:
@@ -228,14 +217,6 @@ The checker resolves `@...` and `docs/...` from the project root, expands `~`, r
 Report missing references as Structural findings, not Critical, unless the missing file is named as a hard dependency (e.g. `release.md` for the project's release skill).
 
 **Broken Markdown references.** In deep mode, `check-maintainability.sh` also scans repository Markdown links. Report these as Structural findings when they point to missing local files, especially design, security, release, or handoff docs that agents may follow during future work.
-
-**Stale verifier cache output.** If validation output points at a deleted temp worktree or non-existent `/tmp` / `/private/tmp` file, parse the captured log with:
-
-```bash
-bash "$(dirname "$HEALTH_SCRIPT")/check-verifier-output.sh" . <log-file>
-```
-
-Only use this script for existing command output supplied by the user or generated during the current audit. Do not run project tests just to feed this checker. Known actions include `golangci-lint cache clean`, `go clean -cache -testcache`, and `npm cache verify`; unknown tools get a diagnostic rerun action.
 
 ### [-] Incremental -- nice to have
 

@@ -66,6 +66,6 @@
 
 ## Context 與 session
 
-1. **以 coherent task 為 context boundary**。只要目標與驗收條件沒有改變，就留在原 session，讓 runtime 的 compaction 或 resume 維持 continuity；需要大量旁支研究時，用 subagent 隔離 context。當目標或驗收條件改變，或工作形成可獨立交付的新 outcome 時，建立新 session。具體機制依 Amp、Claude Code、Codex 的當前能力選擇，不把 `/compact`、handoff 或固定 threshold 寫成跨工具規則。
+- **以 coherent task 為 context boundary**。只要目標與驗收條件沒有改變，就留在原 session，讓 runtime 的 compaction 或 resume 維持 continuity；需要大量旁支研究時，用 subagent 隔離 context。當目標或驗收條件改變，或工作形成可獨立交付的新 outcome 時，建立新 session。具體機制依 Amp、Claude Code、Codex 的當前能力選擇，不把 `/compact`、handoff 或固定 threshold 寫成跨工具規則。
    - Agent 可以在當前對話維護精簡的 current state，但未經批准不得寫入永久 memory。
    - 新 session 只帶入完成該目標所需的驗收條件、決策、限制、相關檔案、驗證狀態與未完成事項，不做 conversation-wide history dump。

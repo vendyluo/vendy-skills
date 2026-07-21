@@ -1,8 +1,6 @@
 ---
 name: design
 description: "Produces distinctive, production-grade UI for pages, components, visual interfaces, frontend typography, motion, and screenshot-driven polish. Use when users ask in any language for UI, frontend, animation, transitions, gestures, interface typography, screenshot-grounded visual polish, or complaints that a screen looks unclear, ugly, inconsistent, abrupt, or visually wrong. Not for backend logic, data pipelines, paged document design, or root-cause debugging of broken renders."
-when_to_use: "設計, 做頁面, 做元件, 不好看, 不和諧, 不清晰, 很醜, 很怪, 很傻, 突兀, 不協調, UI 字型選擇, UI 字形美感, UI 排印, UI 排版, 樣式, 前端, UI, 截圖, 動畫, 動效, 轉場, 手勢, build page, create component, make it look good, style, design, animation, motion, transition, gesture, easing, spring, screenshot with visual complaint, UI typography feels wrong, app font choice feels wrong"
-dispatch_intent: "UI, component, page, visual interface, frontend, motion, animation, transition, gesture, artifact-grounded screenshot aesthetic complaint"
 ---
 
 # Design: Build It With a Point of View

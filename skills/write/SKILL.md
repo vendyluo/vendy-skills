@@ -1,8 +1,6 @@
 ---
 name: write
 description: "Rewrites and polishes prose in Chinese or English, removes AI-like wording, and reviews product localization copy while preserving intent for drafts, docs, release notes, launch copy, and social posts. Use when users ask in any language to draft, rewrite, proofread, localize, review document prose, polish release notes, remove AI-like wording, or prepare launch and social copy. Not for code comments, commit messages, inline docs, document layout, or broken rendering."
-when_to_use: "幫我寫, 改稿, 潤色, 去AI味, 寫一段, 審稿, 文件內容review, 文件語氣review, 本地化文案, 多語言文案, i18n copy, localization copy, review document prose, check document content, 推特, twitter, X推文, tweet, social post, 連貫性, 段落連貫, draft, edit text, proofread, sound natural, polish, rewrite"
-dispatch_intent: "Writing, editing prose, polish, release notes, launch/social copy, remove AI tone"
 ---
 
 # Write: Cut the AI Taste
@@ -56,18 +54,12 @@ For `/write`: the supplied text and current release state override memory. Durab
 
 ## Punctuation Gate
 
-Before returning any produced text (a rewrite, or generated release / reply / social copy), resolve the checker across install layouts and run it:
+Before returning any produced text (a rewrite, or generated release / reply / social copy), replace `<skill-base-dir>` with the base directory reported by the runtime when this skill loads, then run the bundled checker:
 
 ```bash
-GATE="${CLAUDE_SKILL_DIR:+$CLAUDE_SKILL_DIR/scripts/check-punctuation.sh}"
-[ -f "${GATE:-}" ] || GATE="${CLAUDE_SKILL_DIR:+$CLAUDE_SKILL_DIR/skills/write/scripts/check-punctuation.sh}"
-[ -f "${GATE:-}" ] || GATE="./skills/write/scripts/check-punctuation.sh"
-[ -f "${GATE:-}" ] || GATE="./scripts/check-punctuation.sh"
-[ -f "${GATE:-}" ] || { echo "punctuation gate not found; set CLAUDE_SKILL_DIR or run from the installed skill or repository root" >&2; exit 1; }
+GATE="<skill-base-dir>/scripts/check-punctuation.sh"
 bash "$GATE" --lang <zh|en|ja|auto> <file>   # or pipe text via stdin
 ```
-
-`${CLAUDE_SKILL_DIR}` is host-injected. The first path is this skill's own `scripts/` (standalone skill, full bundle, or repo); the fallbacks cover the inlined-root release ZIP, where the script ships under `skills/write/scripts/`.
 
 It enforces character-level punctuation by locale (half/full-width marks, CJK/Latin spacing, em/en dashes) and skips code, inline code, URLs, and markdown link targets, so it never fires on code; the script header documents the exact rule set. Fix every finding while preserving meaning; `--fix` rewrites only the zero-ambiguity zh cases to stdout. `--lang auto` classifies the whole input by fixed priority: any kana routes to ja, else any CJK to zh, else any Hangul to ko (reserved, skipped), else en, so a mostly-Chinese text that merely quotes a Korean glyph still routes to zh; pass an explicit `--lang` for mixed-locale or predominantly-English text. The checker owns character-level punctuation only; quote direction and other judgment calls stay with you and the reference files.
 

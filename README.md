@@ -37,6 +37,6 @@ npx skills add vendyluo/vendy-skills
 python3 scripts/validate.py
 ```
 
-Validator 會檢查 skill frontmatter、相對引用、shell/Python 語法，以及共用 skill 是否混入專案限定名稱。行為改動仍需依相關 skill 的實際 runtime path 做 targeted verification。
+Validator 會檢查 portable skill frontmatter、相對引用、shell/Python 語法、跨 runtime 路徑、專案限定名稱，並執行 bundled helper 的 focused behavior tests。行為改動仍需依相關 skill 的實際 runtime path 做 targeted verification。
 
 上游 attribution 與授權說明見 [LICENSE](LICENSE) 和 [NOTICE.md](NOTICE.md)。

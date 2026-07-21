@@ -1,8 +1,6 @@
 ---
 name: think
 description: "Turns rough ideas into approved, decision-complete plans with validated structure before coding. Use when users ask in any language for planning, architecture, design direction, feasibility, value judgment, autonomous agent loops or harnesses, or whether a feature is worth doing before implementation. Not for bug fixes or small edits."
-when_to_use: "出方案, 給方案, 深入分析, 怎麼設計, 用什麼方案, 判斷一下, 有沒有必要, 值不值得, 自主迴圈, agent 外層, autonomous loop, agent harness, review/fix loop, repeated agents, verifier-driven loop, what's the best approach, plan this, how should I, should we keep this"
-dispatch_intent: "New feature, architecture, how should I design this, value judgment, autonomous loop, agent harness, executable plan, handoff"
 ---
 
 # Think: Design and Validate Before You Build
@@ -111,6 +109,7 @@ Output the classification table first. Wait for the user to confirm the accepted
 - Confirm the working path: `pwd` or `git rev-parse --show-toplevel`. Never assume `~/project` and `~/www/project` are the same.
 - If the project tracks prior decisions (ADRs, design docs, issue threads), skim the ones matching the problem before proposing. Skip if none exist.
 - If the plan involves a default value, env var, or config field, open the project's actual config file (e.g. `app.config.json`, `tauri.conf.json`, `package.json`, `.env`) and lift the live value. Never quote a default from memory or docs.
+- Separate facts from decisions: investigate repository and environment facts directly, even when the user invites broad questions. Ask only for user-owned choices or conflicts that evidence cannot resolve.
 
 ## Check for Official Solutions First
 
@@ -172,6 +171,7 @@ When the user later says "Implement the plan", "可以幹", "直接改", "整", 
 
 - **No placeholders in approved plans.** Every step must be concrete before approval. Forbidden patterns: TBD, TODO, "implement later," "similar to step N," "details to be determined." A plan with placeholders is a promise to plan later.
 - **Phase integrity.** Split work into phases only when each boundary leaves a verifiable, recoverable, and project-acceptable state. Whether that state is independently merged depends on the project's workflow. If the work cannot be cut honestly, keep it as one coherent phase instead of pretending it is staged.
+- **Vertical delivery.** When decomposing implementation into independently deliverable steps, each step must produce a complete user-, consumer-, or operator-observable outcome with its own verification. Schema-only, API-only, and UI-only work are activities inside a slice, not milestones; if no honest slice exists, keep one coherent phase.
 - **Plan red flags (self-check before handoff):** a phase depends on the next phase to be useful, or a "Phase 0: investigate / spike" exists (investigation belongs before the plan, not inside it). Either red flag means the plan is not ready; resolve it before handing off.
 
 ## Gotchas

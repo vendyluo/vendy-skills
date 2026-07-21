@@ -1,8 +1,6 @@
 ---
 name: hunt
 description: "Finds root cause before applying fixes for errors, crashes, regressions, failing tests, broken behavior, and screenshot-reported defects. Use when users report in any language errors, crashes, broken behavior, regressions, failing tests, screenshot evidence, or something that used to work and now fails. Not for code review or new features."
-when_to_use: "排查, 查查, 報錯, 崩潰, 不工作, 不對, 跑不通, 以前是好的, 迴歸, 截圖迴歸, 判斷錯誤原因, 判斷為什麼報錯, 反覆修不好, debug, regression, used to work, broke after update, why broken, not working, what's wrong, fix error, stack trace"
-dispatch_intent: "Error, crash, regression, screenshot-reported defect, test failure, stale cache, runtime boundary, why broken"
 ---
 
 # Hunt: Diagnose Before You Fix

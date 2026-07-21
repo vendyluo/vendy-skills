@@ -1,8 +1,6 @@
 ---
 name: check
 description: "Reviews code diffs, PRs, release readiness, and project audits. Use when users ask in any language for code review, pre-merge checks, release gates, or project audits. Not for debugging root causes, prose review, or executing publish, deploy, merge, or release actions."
-when_to_use: "review, 看看程式碼, 檢查一下, 有沒有問題, 是否需要優化, 合併前, 優化程式碼, 看看PR, review my code, check changes, before merge, code review, code-review, audit, project audit, 專案體檢, 程式碼品質評分, scorecard, rate this codebase"
-dispatch_intent: "Code review, before merge, generated artifacts, safety sinks, project-wide code-quality audit scorecard"
 ---
 
 # Check: Review Before You Ship
@@ -149,6 +147,8 @@ Static content diffs can stay quick even when they touch several generated files
 ## Did We Build What Was Asked?
 
 Before reading code, check scope drift: do the diff and the stated goal match? Label: **on target** / **drift** / **incomplete**.
+
+Evaluate intent and specification correctness independently from implementation quality and project-standard conformance. A pass on either axis cannot offset, suppress, or downgrade a failure on the other.
 
 Also check surgical traceability: every changed file and every new public surface must trace back to the user's stated goal. If a file, dependency, config knob, abstraction, generated artifact, workflow permission, or release behavior cannot be explained in one sentence from the request, label it drift until proven necessary.
 

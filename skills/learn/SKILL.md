@@ -1,8 +1,6 @@
 ---
 name: learn
 description: "Runs an evidence-first research workflow that turns unfamiliar domains, source bundles, or collected material into a usable mental model or publish-ready output. Use when users ask in any language to research, study, deep-dive, compile sources, synthesize unfamiliar material, or turn a source bundle into a coherent reference. Not for quick lookups or single-file reads."
-when_to_use: "學習一下, 深入研究, 研究一下, 整理成文章, 把這批材料整理, 一站式參考, 一篇就夠, 整理成長文, research, deep dive, help me understand, compile sources, unfamiliar domain"
-dispatch_intent: "Deep research, unfamiliar domain, compile sources into output"
 ---
 
 # Learn: From Evidence to Understanding
