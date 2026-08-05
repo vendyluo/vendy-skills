@@ -1,49 +1,41 @@
 # Vendy Skills
 
-一組貼合我工作方式的 agent skills。八個通用 workflow skills 從 [tw93/Waza](https://github.com/tw93/Waza) 衍生，經過重新整理後，只保留能跨專案重用的工程判斷與工作方法；Amp Orb skills 則保存遠端委派與獨立驗證的原則，Amp CLI adapter 維持實驗性。
+Vendy Skills 是一小組以人類意圖為中心、可跨 runtime 使用的工程方法。[PROFILE.md](PROFILE.md) 是這個 repository 編寫與檢查 skills 的治理來源；每個 skill 則獨立把一種人類意圖轉成有證據、授權邊界與完成條件的工作流程。
 
-核心很簡單：先解決真實問題，以證據做判斷，選擇最小足夠且完整的做法，不為抽象、文件或流程本身增加複雜度。完整原則見 [PROFILE.md](PROFILE.md)，英文版見 [PROFILE.en.md](PROFILE.en.md)。
+它不是 agent framework、自主執行 runtime、Phoenix framework，也不是包辦所有工具的目錄。
 
-## 通用 Skills
+## 四種公開意圖
 
-- `think`：收斂需求、架構與價值判斷。
-- `hunt`：從可重現證據找到 root cause，再完成足夠且完整的修正。
-- `check`：review 程式碼、PR、release readiness 與專案品質。
-- `design`：產品 UI、元件、排版、motion 與 screenshot-driven polish。
-- `read`：讀取 URL 與 PDF，依目的回傳摘要、引用或乾淨內容。
-- `learn`：多來源研究、理解與可發布整理。
-- `write`：中英文改寫、本地化與去 AI 味。
-- `health`：檢查 agent instructions、hooks、MCP、verifier 與 AI maintainability。
+- **Frame**：`framing-work` 把粗略想法、方向、價值判斷與自動化邊界收斂成可決定的方案。
+- **Investigate**：`investigating-problems` 從失敗、regression 或 broken behavior 的觀察證據建立 root cause，再決定完整修法。
+- **Examine**：`examining-work` 唯讀評估 diff、PR、計畫、agent output、release readiness 或專案現況。
+- **Make**：`delivering-outcomes` 在方向已定且明確授權後，完成最小且完整的實作或成果。
 
-## Amp Orb Skills（Experimental）
+這四個入口按人的目的分工，不要求使用者理解內部分類、agent 組織或控制流程。
 
-這兩個 skills 的工作原則穩定，但依賴 Amp CLI 的整合仍可能隨 runtime 演進：
+## 選用 specialist
 
-- `amp-orb-delegate`：判斷工作是否適合 Orb，並以成本、repository state、concurrency 與 handoff guards 安全委派。
-- `amp-orb-verify`：從 delegation record、thread、Git refs 與可重現命令獨立驗證 Orb 結果。
+- `verifying-state-contracts`：把有狀態的設計寫成有限狀態契約，檢查 ownership、durability、event ordering 與 invariant，再以 Elixir verifier 輸出 `PASS`、`VIOLATION` 或 `MODEL INCOMPLETE`。
 
-## 邊界
+## 知識邊界
 
-這個 repo 回答「我怎麼工作」，不替專案決定 domain、架構、命令、CI/CD、release、issue tracker 或協作慣例。這些事實留在各專案的 `AGENTS.md`、`CLAUDE.md` 或 project skills。
-
-不另外維護「個人版」與「公司版」。判斷風險時看實際 collaborators、production data、external side effects、專案慣例與 rollback cost，而不是 personal/work 標籤。
+這個 repo 只放可移植的工程判斷與 reusable workflow。服務名稱、domain 規則、實際命令、CI/CD、release、ownership 與協作慣例，應留在各專案自己的 `AGENTS.md`、`CLAUDE.md` 或 project skills。當前 repository 與 runtime 的證據永遠優先於通用方法。
 
 ## 安裝
-
-依需求選擇要安裝的 skill 與 agent，不預設全域安裝：
 
 ```bash
 npx skills add vendyluo/vendy-skills
 ```
 
-`npx skills` 只安裝選定的 `skills/<name>/`。根目錄的 profile 與共用規則不會成為 global instructions；每個 skill 自己攜帶執行所需的最小原則。
+安裝時依需求選擇 skills；不需要把每個方法都載入每項工作。安裝器只複製選定的 `skills/<name>/`，不會把根目錄的 `PROFILE.md` 安裝成 global instructions。因此，每個 `SKILL.md` 都必須自帶完整且與 profile 一致的行為契約。
 
 ## 驗證
 
+完整驗證需要 Python 3 與 Elixir 1.19 以上：
+
 ```bash
 python3 scripts/validate.py
+git diff --check
 ```
 
-Validator 會檢查 portable skill frontmatter、相對引用、shell/Python 語法、跨 runtime 路徑、專案限定名稱，並執行 bundled helper 的 focused behavior tests。行為改動仍需依相關 skill 的實際 runtime path 做 targeted verification。
-
-上游 attribution 與授權說明見 [LICENSE](LICENSE) 和 [NOTICE.md](NOTICE.md)。
+`scripts/validate.py` 會檢查所有直接位於 `skills/` 下的 skill、執行 validator 的 negative fixtures，並執行 state contract verifier 的 focused behavior tests。缺少 Elixir 時，完整驗證會回報 unavailable 並以非零狀態結束，不會誤報為通過。若只修改 state verifier，可單獨執行 `elixir skills/verifying-state-contracts/scripts/test.exs`。

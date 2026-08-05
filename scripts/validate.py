@@ -1,158 +1,202 @@
 #!/usr/bin/env python3
-"""Repo validation contract for vendyluo/skills.
+"""Validate the Vendy Skills source and its bundled behavior tests.
 
-Checks, per skill under skills/:
-  1. SKILL.md exists and its YAML frontmatter uses portable discovery fields.
-  2. Every relative reference to references/, assets/, scripts/ mentioned in
-     the skill's markdown files points to an existing file or directory.
-  3. .sh / .py scripts are syntactically loadable (bash -n / py_compile).
-  4. No project-specific tokens leak into shared skills (they belong in that
-     project's own CLAUDE.md / project skills).
-  5. Skill instructions do not depend on one runtime's installation variables.
-  6. Focused behavior tests for bundled helpers pass.
-
-Exit 0 = pass, 1 = failures found.
+Exit 0: structural checks and behavior tests passed.
+Exit 1: source validation or a behavior test failed.
+Exit 2: a required validation prerequisite is unavailable.
 """
+
+from __future__ import annotations
+
 import ast
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
+import urllib.parse
+
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SKILLS = ROOT / "skills"
-
-# Names that must stay in each project's own context, never in shared skills.
-FORBIDDEN_TOKENS = [
-    "hunger_api2", "hotcake",
-    "stg_release", "pr_release", "prod_prepare", "prod_release",
-]
-
-# Amp, Claude Code, and Codex dispatch from name + description. These custom
-# top-level fields look authoritative but are ignored by portable runtimes.
-INERT_FRONTMATTER_FIELDS = ("when_to_use", "dispatch_intent")
-
-# Bundled resources should resolve from the host-provided skill base directory,
-# not from a runtime-specific environment variable.
-RUNTIME_SPECIFIC_TOKENS = ("CLAUDE_SKILL_DIR",)
-
-# Referenced paths that are created at runtime (fonts downloaded on demand)
-# or deliberately not bundled (upstream demo/gallery assets; user-supplied files).
-NOT_BUNDLED = {
-    "assets/fonts",
-    "assets/demos", "assets/demos/images",
-    "assets/examples",
-    "assets/illustrations",
-    "assets/client-logo.svg",  # user-supplied brand asset, path is an example
-}
-
-REF_RE = re.compile(r"(?<![\w/])((?:references|assets|scripts)/[\w./-]+)")
-PLACEHOLDER_RE = re.compile(r"[<>*{}$]")
-
-failures = []
+NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+FRONTMATTER_FIELDS = {"name", "description", "license", "compatibility"}
+FORBIDDEN_TOKENS = ("CLAUDE_SKILL_DIR", "when_to_use", "dispatch_intent")
 
 
-def check_frontmatter(skill_dir: pathlib.Path):
-    md = skill_dir / "SKILL.md"
-    if not md.is_file():
+def parse_frontmatter(path: pathlib.Path) -> tuple[dict[str, str], str] | None:
+    """Parse this repository's deliberately flat YAML frontmatter subset."""
+    text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    if not lines or lines[0] != "---":
+        return None
+
+    closing = [index for index, line in enumerate(lines[1:], 1) if line == "---"]
+    if not closing:
+        return None
+
+    fields: dict[str, str] = {}
+    for line in lines[1 : closing[0]]:
+        if not line or line.startswith((" ", "\t")) or ":" not in line:
+            return None
+        key, raw_value = line.split(":", 1)
+        key = key.strip()
+        value = raw_value.strip()
+        if not key or not value or key in fields:
+            return None
+        if value[:1] in {'"', "'"}:
+            if len(value) < 2 or value[-1] != value[0]:
+                return None
+            value = value[1:-1]
+        fields[key] = value
+
+    return fields, text
+
+
+def check_skill(skill_dir: pathlib.Path, failures: list[str]) -> None:
+    skill_file = skill_dir / "SKILL.md"
+    if not skill_file.is_file():
         failures.append(f"{skill_dir.name}: missing SKILL.md")
         return
-    text = md.read_text()
-    m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
-    if not m:
-        failures.append(f"{skill_dir.name}: SKILL.md has no frontmatter block")
+
+    parsed = parse_frontmatter(skill_file)
+    if parsed is None:
+        failures.append(f"{skill_dir.name}: frontmatter must use unique flat key/value fields between YAML delimiters")
         return
-    fm = m.group(1)
-    for field in ("name:", "description:"):
-        if not re.search(rf"^{field}", fm, re.M):
-            failures.append(f"{skill_dir.name}: frontmatter missing {field}")
-    for field in INERT_FRONTMATTER_FIELDS:
-        if re.search(rf"^{field}:", fm, re.M):
-            failures.append(
-                f"{skill_dir.name}: frontmatter field '{field}' is not portable; "
-                "put dispatch vocabulary in description")
+    fields, text = parsed
+
+    unknown = sorted(set(fields) - FRONTMATTER_FIELDS)
+    if unknown:
+        failures.append(f"{skill_dir.name}: unsupported frontmatter fields: {', '.join(unknown)}")
+
+    name = fields.get("name", "")
+    if name != skill_dir.name:
+        failures.append(f"{skill_dir.name}: frontmatter name is {name!r}")
+    if len(name) > 64 or not NAME_RE.fullmatch(name):
+        failures.append(f"{skill_dir.name}: name must be at most 64 lowercase alphanumeric/hyphen characters")
+    if not name.split("-", 1)[0].endswith("ing"):
+        failures.append(f"{skill_dir.name}: catalog policy requires the first name token to end in 'ing'")
+
+    description = fields.get("description", "")
+    if not description:
+        failures.append(f"{skill_dir.name}: description is required")
+    elif len(description) > 1024:
+        failures.append(f"{skill_dir.name}: description exceeds 1024 characters")
+    elif "Use when" not in description:
+        failures.append(f"{skill_dir.name}: description must state when the skill applies")
+
+    compatibility = fields.get("compatibility", "")
+    if len(compatibility) > 500:
+        failures.append(f"{skill_dir.name}: compatibility exceeds 500 characters")
+
+    line_count = len(text.splitlines())
+    if line_count >= 500:
+        failures.append(f"{skill_dir.name}: SKILL.md has {line_count} lines; must be under 500")
+
+    for token in FORBIDDEN_TOKENS:
+        if token in text:
+            failures.append(f"{skill_dir.name}: contains forbidden runtime/inert token {token}")
+
+    check_links(skill_dir, failures)
+    check_scripts(skill_dir, failures)
 
 
-def check_references(skill_dir: pathlib.Path):
-    for md in skill_dir.rglob("*.md"):
-        text = md.read_text()
-        for ref in sorted(set(REF_RE.findall(text))):
-            clean = ref.rstrip("/")
-            if PLACEHOLDER_RE.search(ref) or ".." in ref:
+def check_links(skill_dir: pathlib.Path, failures: list[str]) -> None:
+    root = skill_dir.resolve()
+    for markdown in sorted(skill_dir.rglob("*.md")):
+        text = markdown.read_text(encoding="utf-8")
+        for raw in MARKDOWN_LINK_RE.findall(text):
+            target = raw.strip().split()[0].strip("<>")
+            if not target or target.startswith("#") or urllib.parse.urlparse(target).scheme:
                 continue
-            if clean in NOT_BUNDLED or any(clean.startswith(p + "/") for p in NOT_BUNDLED):
+            relative = urllib.parse.unquote(target.split("#", 1)[0])
+            candidate = (markdown.parent / relative).resolve()
+            try:
+                candidate.relative_to(root)
+            except ValueError:
+                failures.append(f"{skill_dir.name}: bundled link escapes the skill directory: {relative}")
                 continue
-            target = skill_dir / clean
-            if target.exists():
-                continue
-            # extensionless refs like `slides-marp(.md|.css)` -> prefix match
-            if not target.suffix and any(target.parent.glob(target.name + ".*")):
-                continue
-            failures.append(
-                f"{skill_dir.name}: {md.relative_to(skill_dir)} references missing {ref}")
+            if relative and not candidate.exists():
+                source = markdown.relative_to(skill_dir)
+                failures.append(f"{skill_dir.name}: {source} has unresolved link {relative}")
 
 
-def check_scripts(skill_dir: pathlib.Path):
-    for sh in skill_dir.rglob("*.sh"):
-        r = subprocess.run(["bash", "-n", str(sh)], capture_output=True)
-        if r.returncode != 0:
-            failures.append(f"{skill_dir.name}: bash -n failed for {sh.name}: "
-                            f"{r.stderr.decode().strip().splitlines()[:1]}")
-    for py in skill_dir.rglob("*.py"):
+def check_scripts(skill_dir: pathlib.Path, failures: list[str]) -> None:
+    for shell in sorted(skill_dir.rglob("*.sh")):
+        result = subprocess.run(["bash", "-n", str(shell)], capture_output=True, text=True)
+        if result.returncode:
+            failures.append(f"{skill_dir.name}: shell syntax failed for {shell.name}: {result.stderr.strip()}")
+
+    for python in sorted(skill_dir.rglob("*.py")):
         try:
-            ast.parse(py.read_text(), filename=str(py))
-        except SyntaxError as e:
-            failures.append(f"{skill_dir.name}: syntax error in {py.name}: {e.msg} (line {e.lineno})")
+            ast.parse(python.read_text(encoding="utf-8"), filename=str(python))
+        except SyntaxError as error:
+            failures.append(f"{skill_dir.name}: Python syntax failed for {python.name}:{error.lineno}: {error.msg}")
 
 
-def check_forbidden(skill_dir: pathlib.Path):
-    for md in skill_dir.rglob("*.md"):
-        text = md.read_text()
-        for tok in FORBIDDEN_TOKENS:
-            for i, line in enumerate(text.splitlines(), 1):
-                if tok in line:
-                    failures.append(
-                        f"{skill_dir.name}: project-specific token '{tok}' at "
-                        f"{md.relative_to(skill_dir)}:{i}")
+def run_validator_tests(failures: list[str]) -> None:
+    test = ROOT / "scripts" / "test_validate.py"
+    result = subprocess.run([sys.executable, str(test)], cwd=ROOT, capture_output=True, text=True)
+    if result.returncode:
+        failures.append(f"validator: focused tests failed\n{(result.stdout + result.stderr).strip()}")
+    else:
+        print("PASS: validator focused tests")
 
 
-def check_portability(skill_dir: pathlib.Path):
-    for md in skill_dir.rglob("*.md"):
-        for i, line in enumerate(md.read_text().splitlines(), 1):
-            for token in RUNTIME_SPECIFIC_TOKENS:
-                if token in line:
-                    failures.append(
-                        f"{skill_dir.name}: runtime-specific token '{token}' at "
-                        f"{md.relative_to(skill_dir)}:{i}")
+def run_behavior_tests(failures: list[str], unavailable: list[str]) -> None:
+    elixir = shutil.which("elixir")
+    if elixir is None:
+        unavailable.append("Elixir 1.19+ is required for the distributed state verifier test")
+        return
+
+    version = subprocess.run([elixir, "--version"], capture_output=True, text=True)
+    match = re.search(r"Elixir (\d+)\.(\d+)", version.stdout + version.stderr)
+    if version.returncode or not match or (int(match.group(1)), int(match.group(2))) < (1, 19):
+        unavailable.append("Elixir 1.19+ is required for the distributed state verifier test")
+        return
+
+    test = SKILLS / "verifying-state-contracts" / "scripts" / "test.exs"
+    result = subprocess.run([elixir, str(test)], cwd=ROOT, capture_output=True, text=True)
+    if result.returncode:
+        failures.append(f"verifying-state-contracts: behavior tests failed\n{(result.stdout + result.stderr).strip()}")
+    else:
+        print("PASS: verifying-state-contracts behavior tests")
 
 
-def check_behavior_tests():
-    test = SKILLS / "health" / "scripts" / "tests" / "test_check_maintainability.py"
-    result = subprocess.run(
-        [sys.executable, str(test)], cwd=ROOT, capture_output=True, text=True)
-    if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip().splitlines()
-        failures.append(
-            "health: maintainability behavior test failed: "
-            + (detail[-1] if detail else f"exit {result.returncode}"))
+def main() -> int:
+    failures: list[str] = []
+    unavailable: list[str] = []
 
+    if not SKILLS.is_dir():
+        print("FAIL: skills directory is missing")
+        return 1
 
-def main():
-    skill_dirs = sorted(p for p in SKILLS.iterdir() if p.is_dir())
-    for d in skill_dirs:
-        check_frontmatter(d)
-        check_references(d)
-        check_scripts(d)
-        check_forbidden(d)
-        check_portability(d)
-    check_behavior_tests()
+    skill_dirs = sorted(path for path in SKILLS.iterdir() if path.is_dir())
+    for skill_dir in skill_dirs:
+        check_skill(skill_dir, failures)
+    run_validator_tests(failures)
+    run_behavior_tests(failures, unavailable)
+
     if failures:
         print(f"FAIL ({len(failures)}):")
-        for f in failures:
-            print(f"  - {f}")
-        sys.exit(1)
+        for failure in failures:
+            print(f"  - {failure}")
+        if unavailable:
+            print("UNAVAILABLE:")
+            for item in unavailable:
+                print(f"  - {item}")
+        return 1
+
+    if unavailable:
+        print("UNAVAILABLE:")
+        for item in unavailable:
+            print(f"  - {item}")
+        return 2
+
     print(f"PASS: {len(skill_dirs)} skills validated")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

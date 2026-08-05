@@ -1,4 +1,0 @@
-interface:
-  display_name: "Amp Orb Delegate"
-  short_description: "Safely delegate bounded work to an Amp Orb"
-  default_prompt: "Use $amp-orb-delegate to decide whether this task belongs in an Amp Orb and prepare a safe delegation."
