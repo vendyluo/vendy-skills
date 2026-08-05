@@ -1,4 +1,4 @@
-contract = Code.eval_file(Path.join(__DIR__, "fulu-fixed.exs")) |> elem(0)
+model = Code.eval_file(Path.join(__DIR__, "fulu-fixed.exs")) |> elem(0)
 
 buggy_death = %{
   name: :death,
@@ -10,11 +10,11 @@ buggy_death = %{
 }
 
 %{
-  contract
+  model
   | name: "Fulu pre-fix death clears pause",
-    writers: Map.update!(contract.writers, :control, &[:combat | &1]),
+    writers: Map.update!(model.writers, :control, &[:combat | &1]),
     transitions:
-      Enum.map(contract.transitions, fn
+      Enum.map(model.transitions, fn
         %{name: :death} -> buggy_death
         transition -> transition
       end)

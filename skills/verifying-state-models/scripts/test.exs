@@ -2,7 +2,7 @@ Code.require_file(Path.join(__DIR__, "verifier.exs"))
 
 ExUnit.start()
 
-defmodule StateContract.VerifierTest do
+defmodule StateModel.VerifierTest do
   use ExUnit.Case, async: true
 
   @examples Path.expand("../examples", __DIR__)
@@ -26,7 +26,7 @@ defmodule StateContract.VerifierTest do
     contract = %{contract | questions: ["Can a refund reopen fulfillment?"]}
 
     assert {:incomplete, %{errors: [], questions: [_question]}} =
-             StateContract.Verifier.verify(contract)
+             StateModel.Verifier.verify(contract)
   end
 
   test "every transition must classify every axis as set or preserved" do
@@ -35,7 +35,7 @@ defmodule StateContract.VerifierTest do
     incomplete = %{first | preserve: List.delete(first.preserve, :authority)}
     contract = %{contract | transitions: [incomplete | rest]}
 
-    assert {:incomplete, %{errors: errors}} = StateContract.Verifier.verify(contract)
+    assert {:incomplete, %{errors: errors}} = StateModel.Verifier.verify(contract)
     assert Enum.any?(errors, &String.contains?(&1, "set or preserve every axis exactly once"))
   end
 
@@ -57,7 +57,7 @@ defmodule StateContract.VerifierTest do
       ]
     }
 
-    assert {:violation, report} = StateContract.Verifier.verify(contract)
+    assert {:violation, report} = StateModel.Verifier.verify(contract)
     assert report.rule == "no reachable deadlock"
     assert Enum.map(report.trace, & &1.transition) == [:to_b]
   end
@@ -66,7 +66,7 @@ defmodule StateContract.VerifierTest do
     contract = example("fulu-fixed.exs")
 
     assert {:incomplete, %{errors: [error]}} =
-             StateContract.Verifier.verify(contract, max_states: 1)
+             StateModel.Verifier.verify(contract, max_states: 1)
 
     assert error == "exploration exceeded 1 reachable states"
   end
@@ -85,7 +85,7 @@ defmodule StateContract.VerifierTest do
         ]
     }
 
-    assert {:incomplete, %{errors: errors}} = StateContract.Verifier.verify(contract)
+    assert {:incomplete, %{errors: errors}} = StateModel.Verifier.verify(contract)
     assert Enum.any?(errors, &String.contains?(&1, "transition is missing"))
     assert Enum.any?(errors, &String.contains?(&1, "unknown transition"))
     assert Enum.any?(errors, &String.contains?(&1, "exactly one selector"))
@@ -103,7 +103,7 @@ defmodule StateContract.VerifierTest do
 
     contract = %{contract | transitions: [invalid | rest]}
 
-    assert {:incomplete, %{errors: errors}} = StateContract.Verifier.verify(contract)
+    assert {:incomplete, %{errors: errors}} = StateModel.Verifier.verify(contract)
     assert Enum.any?(errors, &String.contains?(&1, "uses undeclared :operation=:typo"))
   end
 
@@ -111,7 +111,7 @@ defmodule StateContract.VerifierTest do
     contract = example("fulu-fixed.exs")
     contract = %{contract | axes: Map.put(contract.axes, :operation, :not_a_list)}
 
-    assert {:incomplete, %{errors: errors}} = StateContract.Verifier.verify(contract)
+    assert {:incomplete, %{errors: errors}} = StateModel.Verifier.verify(contract)
     assert Enum.any?(errors, &String.contains?(&1, "axis :operation must have values"))
   end
 
@@ -127,7 +127,7 @@ defmodule StateContract.VerifierTest do
         transition_rules: [Map.delete(rule, :name)]
     }
 
-    assert {:incomplete, %{errors: errors}} = StateContract.Verifier.verify(contract)
+    assert {:incomplete, %{errors: errors}} = StateModel.Verifier.verify(contract)
     assert Enum.any?(errors, &String.contains?(&1, "transition rule requires a name"))
     assert Enum.any?(errors, &String.contains?(&1, "transition name must be an atom"))
   end
@@ -136,17 +136,17 @@ defmodule StateContract.VerifierTest do
     contract = example("fulu-fixed.exs")
     contract = %{contract | axes: %URI{}}
 
-    assert {:incomplete, %{errors: errors}} = StateContract.Verifier.verify(contract)
+    assert {:incomplete, %{errors: errors}} = StateModel.Verifier.verify(contract)
     assert "axes must be a plain map" in errors
   end
 
   test "formatted counterexamples are deterministic" do
     result = verify_example("fulu-buggy.exs")
-    assert StateContract.Verifier.format(result) == StateContract.Verifier.format(result)
-    assert StateContract.Verifier.format(result) =~ "%{authority: :valid, control: :manual_pause"
+    assert StateModel.Verifier.format(result) == StateModel.Verifier.format(result)
+    assert StateModel.Verifier.format(result) =~ "%{authority: :valid, control: :manual_pause"
   end
 
-  defp verify_example(name), do: name |> example() |> StateContract.Verifier.verify()
+  defp verify_example(name), do: name |> example() |> StateModel.Verifier.verify()
 
   defp example(name) do
     @examples |> Path.join(name) |> Code.eval_file() |> elem(0)

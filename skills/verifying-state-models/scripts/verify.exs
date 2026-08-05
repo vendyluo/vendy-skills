@@ -15,13 +15,13 @@ case System.argv() do
     result =
       case loaded_contract do
         {:ok, contract} ->
-          StateContract.Verifier.verify(contract)
+          StateModel.Verifier.verify(contract)
 
         {:error, message} ->
           {:incomplete, %{errors: ["contract could not be loaded: #{message}"], questions: []}}
       end
 
-    IO.puts(StateContract.Verifier.format(result))
+    IO.puts(StateModel.Verifier.format(result))
 
     exit_code =
       case result do

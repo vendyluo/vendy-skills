@@ -1,4 +1,4 @@
-defmodule StateContract.Verifier do
+defmodule StateModel.Verifier do
   @moduledoc false
 
   @max_states 100_000

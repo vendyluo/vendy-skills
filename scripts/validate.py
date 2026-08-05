@@ -156,12 +156,12 @@ def run_behavior_tests(failures: list[str], unavailable: list[str]) -> None:
         unavailable.append("Elixir 1.19+ is required for the distributed state verifier test")
         return
 
-    test = SKILLS / "verifying-state-contracts" / "scripts" / "test.exs"
+    test = SKILLS / "verifying-state-models" / "scripts" / "test.exs"
     result = subprocess.run([elixir, str(test)], cwd=ROOT, capture_output=True, text=True)
     if result.returncode:
-        failures.append(f"verifying-state-contracts: behavior tests failed\n{(result.stdout + result.stderr).strip()}")
+        failures.append(f"verifying-state-models: behavior tests failed\n{(result.stdout + result.stderr).strip()}")
     else:
-        print("PASS: verifying-state-contracts behavior tests")
+        print("PASS: verifying-state-models behavior tests")
 
 
 def main() -> int:

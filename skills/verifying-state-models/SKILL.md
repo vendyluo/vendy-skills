@@ -1,10 +1,10 @@
 ---
-name: verifying-state-contracts
+name: verifying-state-models
 description: Reviews stateful designs for mixed dimensions, ownership, durability, event-ordering, and missing invariants, then runs a deterministic finite-state verifier. Use when designing or reviewing backend workflows, frontend async flows, lifecycle systems, or AI-generated state transitions.
 compatibility: Requires Elixir 1.19 or newer to run the bundled prototype verifier.
 ---
 
-# Verifying State Contracts
+# Verifying State Models
 
 Turn prose or code-level state handling into an explicit state contract, challenge the model, then use the bundled deterministic verifier. Never treat an LLM judgment as verification.
 

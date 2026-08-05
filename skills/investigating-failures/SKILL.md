@@ -1,9 +1,9 @@
 ---
-name: investigating-problems
+name: investigating-failures
 description: Investigates failures, regressions, failing tests, crashes, and broken behavior to establish root cause and a verified repair. Use when something is reported as wrong or previously working behavior no longer holds.
 ---
 
-# Investigating Problems
+# Investigating Failures
 
 Move from an observed failure to a root cause, then make the narrowest repair that fully resolves it when implementation is authorized. A symptom patch is not a diagnosis.
 

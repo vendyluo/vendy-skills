@@ -1,5 +1,5 @@
 %{
-  name: "Fulu automation authority through death recovery",
+  name: "Fulu state model for authority through death recovery",
   axes: %{
     life: [:alive, :dead],
     control: [:active, :manual_pause, :connection_pause, :lease_pause],

@@ -1,4 +1,4 @@
-# Prototype State Contract Format
+# Prototype State Model Format
 
 The prototype loads a trusted Elixir file whose final expression is one map.
 

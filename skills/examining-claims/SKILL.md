@@ -1,9 +1,9 @@
 ---
-name: examining-work
+name: examining-claims
 description: Examines diffs, pull requests, plans, agent outputs, release readiness, and project state against evidence and declared contracts. Use when a read-only review, audit, verification, or readiness judgment is requested.
 ---
 
-# Examining Work
+# Examining Claims
 
 Evaluate claims against current evidence and return the findings that can change a decision. This is a read-only workflow: never edit, fix, commit, merge, publish, or release unless separately asked.
 

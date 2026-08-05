@@ -1,9 +1,9 @@
 ---
-name: framing-work
+name: framing-decisions
 description: Frames rough ideas into evidence-based direction, architecture, value, automation, and authority decisions. Use when an outcome or approach is still undecided and material tradeoffs must be resolved before implementation.
 ---
 
-# Framing Work
+# Framing Decisions
 
 Turn an unsettled idea into a decision that another person can understand and act on. Plan only when doing so resolves a choice that would otherwise block or endanger the work. This skill never implements without separate authorization.
 
