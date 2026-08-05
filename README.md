@@ -13,10 +13,6 @@ Vendy Skills 是一小組以人類意圖為中心、可跨 runtime 使用的工�
 
 這四個入口按人的目的分工，不要求使用者理解內部分類、agent 組織或控制流程。
 
-## 選用 specialist
-
-- `verifying-state-models`：把有狀態的設計寫成有限模型，檢查 ownership、durability、event ordering 與 invariant，再以 Elixir verifier 輸出 `PASS`、`VIOLATION` 或 `MODEL INCOMPLETE`。
-
 ## 知識邊界
 
 這個 repo 只放可移植的工程判斷與 reusable workflow。服務名稱、domain 規則、實際命令、CI/CD、release、ownership 與協作慣例，應留在各專案自己的 `AGENTS.md`、`CLAUDE.md` 或 project skills。當前 repository 與 runtime 的證據永遠優先於通用方法。
@@ -31,11 +27,11 @@ npx skills add vendyluo/vendy-skills
 
 ## 驗證
 
-完整驗證需要 Python 3 與 Elixir 1.19 以上：
+完整驗證需要 Python 3：
 
 ```bash
 python3 scripts/validate.py
 git diff --check
 ```
 
-`scripts/validate.py` 會檢查所有直接位於 `skills/` 下的 skill、執行 validator 的 negative fixtures，並執行 state model verifier 的 focused behavior tests。缺少 Elixir 時，完整驗證會回報 unavailable 並以非零狀態結束，不會誤報為通過。若只修改 state verifier，可單獨執行 `elixir skills/verifying-state-models/scripts/test.exs`。
+`scripts/validate.py` 會檢查所有直接位於 `skills/` 下的 skill，並執行 validator 的 negative fixtures。

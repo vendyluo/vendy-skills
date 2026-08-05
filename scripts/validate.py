@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Validate the Vendy Skills source and its bundled behavior tests.
+"""Validate the Vendy Skills source.
 
-Exit 0: structural checks and behavior tests passed.
-Exit 1: source validation or a behavior test failed.
-Exit 2: a required validation prerequisite is unavailable.
+Exit 0: structural checks passed.
+Exit 1: source validation failed.
 """
 
 from __future__ import annotations
@@ -11,7 +10,6 @@ from __future__ import annotations
 import ast
 import pathlib
 import re
-import shutil
 import subprocess
 import sys
 import urllib.parse
@@ -144,29 +142,8 @@ def run_validator_tests(failures: list[str]) -> None:
         print("PASS: validator focused tests")
 
 
-def run_behavior_tests(failures: list[str], unavailable: list[str]) -> None:
-    elixir = shutil.which("elixir")
-    if elixir is None:
-        unavailable.append("Elixir 1.19+ is required for the distributed state verifier test")
-        return
-
-    version = subprocess.run([elixir, "--version"], capture_output=True, text=True)
-    match = re.search(r"Elixir (\d+)\.(\d+)", version.stdout + version.stderr)
-    if version.returncode or not match or (int(match.group(1)), int(match.group(2))) < (1, 19):
-        unavailable.append("Elixir 1.19+ is required for the distributed state verifier test")
-        return
-
-    test = SKILLS / "verifying-state-models" / "scripts" / "test.exs"
-    result = subprocess.run([elixir, str(test)], cwd=ROOT, capture_output=True, text=True)
-    if result.returncode:
-        failures.append(f"verifying-state-models: behavior tests failed\n{(result.stdout + result.stderr).strip()}")
-    else:
-        print("PASS: verifying-state-models behavior tests")
-
-
 def main() -> int:
     failures: list[str] = []
-    unavailable: list[str] = []
 
     if not SKILLS.is_dir():
         print("FAIL: skills directory is missing")
@@ -176,23 +153,12 @@ def main() -> int:
     for skill_dir in skill_dirs:
         check_skill(skill_dir, failures)
     run_validator_tests(failures)
-    run_behavior_tests(failures, unavailable)
 
     if failures:
         print(f"FAIL ({len(failures)}):")
         for failure in failures:
             print(f"  - {failure}")
-        if unavailable:
-            print("UNAVAILABLE:")
-            for item in unavailable:
-                print(f"  - {item}")
         return 1
-
-    if unavailable:
-        print("UNAVAILABLE:")
-        for item in unavailable:
-            print(f"  - {item}")
-        return 2
 
     print(f"PASS: {len(skill_dirs)} skills validated")
     return 0
