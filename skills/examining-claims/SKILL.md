@@ -1,6 +1,6 @@
 ---
 name: examining-claims
-description: Evaluates a claim against current evidence. Use when asked for a read-only review, audit, or readiness judgment.
+description: Provides an optional evidence-review checklist. Use when the user explicitly requests the examining-claims skill, not for routine review.
 ---
 
 # Examining Claims

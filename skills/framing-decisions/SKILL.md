@@ -1,6 +1,6 @@
 ---
 name: framing-decisions
-description: Compares approaches for an unresolved consequential choice. Use when a product or architecture decision must be settled before implementation.
+description: Provides an optional decision-framing checklist. Use when the user explicitly requests the framing-decisions skill, not for routine planning.
 ---
 
 # Framing Decisions

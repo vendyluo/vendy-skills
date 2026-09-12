@@ -1,6 +1,6 @@
 ---
 name: investigating-failures
-description: Diagnoses a reported failure and verifies an authorized repair. Use when errors, regressions, failing tests, or broken behavior are reported.
+description: Provides an optional failure-investigation checklist. Use when the user explicitly requests the investigating-failures skill, not for routine debugging.
 ---
 
 # Investigating Failures

@@ -1,6 +1,6 @@
 ---
 name: delivering-outcomes
-description: Completes a settled implementation or artifact. Use when asked to execute an accepted plan or finish a defined change.
+description: Provides an optional delivery checklist. Use when the user explicitly requests the delivering-outcomes skill, not for routine implementation.
 ---
 
 # Delivering Outcomes
