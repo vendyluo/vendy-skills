@@ -1,94 +1,32 @@
 ---
 name: investigating-failures
-description: Investigates failures, regressions, failing tests, crashes, and broken behavior to establish root cause and a verified repair. Use when something is reported as wrong or previously working behavior no longer holds.
+description: Diagnoses a reported failure and verifies an authorized repair. Use when errors, regressions, failing tests, or broken behavior are reported.
 ---
 
 # Investigating Failures
 
-Move from an observed failure to a root cause, then make the narrowest repair that fully resolves it when implementation is authorized. A symptom patch is not a diagnosis.
+Establish why the reported behavior fails, then repair it when that is the intended request. An explanation-only request stays read-only; a request to fix already authorizes diagnosis, the local repair, and relevant verification.
 
-## Use This Skill For
+## Find a discriminating observation
 
-- errors, crashes, and failing tests;
-- regressions or behavior that used to work;
-- intermittent, timing, lifecycle, state, data, or integration failures;
-- broken UI, generated output, commands, or runtime behavior;
-- performance complaints that need measurement.
+Separate the observed symptom from the proposed cause. Reproduce the smallest failing case when safe; otherwise use the closest trustworthy evidence and state the limitation. Inspect the owning path, relevant callers, inputs, environment, and known-good behavior as needed.
 
-Do not use it for general code review, release assessment, architecture planning, or a new feature with no reported failure.
+Form a falsifiable explanation that accounts for the material symptoms. Choose a probe whose result differs between competing explanations. Follow ordering and lifecycle when timing matters, inspect the render for visual defects, and measure performance complaints. Do not repeat unchanged commands or restarts without a reason.
 
-## Observe Before Explaining
+If evidence contradicts the hypothesis, revise it. If the cause remains uncertain, continue with the next useful safe probe; a progress checkpoint is not a reason to stop unless blocked or asked to pause.
 
-Restate the reported symptom without broadening it. Gather only the context needed to reproduce or directly observe the failure:
+## Repair the cause
 
-- exact input, action sequence, environment, and version;
-- expected and actual behavior;
-- current source path and runtime boundary;
-- error output, logs, state, artifact, screenshot, or measurement;
-- known-good state when a regression is claimed.
+Before changing behavior, understand the failing condition, how it reaches the symptom, and what observation would distinguish a repair from a symptom patch. Scale the explanation to the defect; an obvious local error does not require a formal investigation report.
 
-Run the smallest reproducible check first. If reproduction is unsafe or unavailable, inspect the nearest trustworthy evidence and state the limitation. Do not turn absence of evidence into a confident cause.
+Use the smallest complete repair and preserve unrelated behavior and work. Check sibling sites only when the confirmed cause suggests the same defect. Similarity alone does not authorize broader cleanup.
 
-List material symptoms before settling on a hypothesis. A cause must explain all observed symptoms, not only the easiest one.
+Carry the user's existing fix authorization through the repair and verification. Ask only for uncovered consequential product or contract decisions, consumer migrations, destructive actions, or external effects. Do not stop merely because diagnosis is complete.
 
-## Trace the Failure
+## Verify and finish
 
-Follow the actual path backward from symptom to the boundary the project controls. Read callers, state transitions, data flow, generated artifacts, and external responses as needed. For layered systems, test the lower layer before blaming the visible one.
+Prefer a regression check that fails on the original behavior and passes after the repair, with expectations independent of the implementation. Broaden testing according to the affected consumers and required project checks. When automation cannot credibly exercise the boundary, use repeatable runtime evidence and name the gap.
 
-Form a specific, disprovable hypothesis:
+Remove temporary diagnostic artifacts. Stop once the reported failure is resolved and relevant checks are complete, or a concrete blocker needs user action. Do not add unrelated hardening or an automatic commit requirement.
 
-> The failure occurs because **X** at **location or boundary Y**, supported by **evidence Z**.
-
-Use a discriminating probe that could make the hypothesis false. Instrument ordering, lifecycle, or concurrency when timing matters; inspect rendered output when the defect is visual; measure a baseline when the complaint is performance. Avoid logs or tests that merely confirm the symptom again.
-
-If a probe disproves the current explanation, withdraw it and state what the result changes. A rejected explanation cannot justify another code change. Repeating an unchanged command or restart without a new question is not progress.
-
-## Establish Root Cause
-
-Before changing behavior, be able to state:
-
-- the exact condition that creates the failure;
-- why existing guards do not prevent it;
-- how it propagates to each observed symptom;
-- the narrow check that fails before the repair and passes after it.
-
-If that statement is not yet possible, report an investigation checkpoint: evidence collected, hypotheses ruled out, remaining unknowns, and the next discriminating probe.
-
-## Choose the Repair
-
-Prefer the smallest sufficient and complete change. Small excludes unrelated refactoring and speculative flexibility. Complete covers the real outcome, directly affected contracts and documentation, and sibling sites only when they share the same reproducible root cause, risk shape, remedy, contract behavior, and verification path.
-
-Search for same-shape siblings after confirming the cause. Treat similarity as a lead, not permission to fix unrelated problems. Report different causes or product questions separately.
-
-If the repair requires a new shared abstraction, foundational rewrite, consumer migration, external contract change, irreversible action, or product decision, stop at that boundary and present the evidence and alternatives. Do not disguise it as a bug fix.
-
-## Authorization
-
-Investigation and explanation are read-only by default. Implement only when the request authorizes a fix or modification. Authorized implementation may include focused diagnostic instrumentation and a regression test needed for the repair. Remove temporary instrumentation before completion.
-
-A coherent verified local checkpoint commit is included when the task's hunks can be isolated safely. Push, merge, release, deploy, destructive cleanup, and external replies remain separate authority surfaces unless explicitly included.
-
-## Verify the Claim
-
-Run the narrowest check that exercises the violated behavior, then broader relevant checks when blast radius warrants them. Verification must match the claim:
-
-- compilation does not prove runtime behavior;
-- a source diff does not prove generated output;
-- a unit test does not prove an installed command path;
-- a self-report does not prove an external effect;
-- a screenshot does not prove hidden state correctness.
-
-Prefer a durable regression guard that fails on the original behavior. If automation cannot exercise the real boundary credibly, use a repeatable runtime observation or artifact comparison and name the remaining gap instead of manufacturing a hollow test.
-
-## Report
-
-Lead with status and root cause. Include:
-
-- observed failure and reproduction;
-- root cause with location or boundary;
-- repair made or proposed;
-- same-root-cause sibling scope;
-- exact verification command and result;
-- unresolved uncertainty and completion state.
-
-Distinguish `implementation complete`, `local tests passed`, `local verification blocked`, and any applicable CI state. Never infer one from another.
+Report the cause, repair or proposed remedy, verification result, and material uncertainty. Keep local success distinct from CI, deployment, and external state. Reconcile unknown external effects before retrying them.
