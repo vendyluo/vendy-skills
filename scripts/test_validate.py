@@ -73,7 +73,31 @@ def main() -> None:
         validate.check_skill(valid, failures)
         assert failures == [], failures
 
-    print("PASS: 5 validator fixtures")
+        renamed = write_skill(
+            root,
+            "code-review",
+            "name: code-review\ndescription: Reviews code. Use when reviewing a diff.\n",
+        )
+        failures = []
+        validate.check_skill(renamed, failures)
+        assert failures == [], failures
+
+        invalid_name = write_skill(
+            root,
+            "Code_Review",
+            "name: Code_Review\ndescription: Tests names. Use when validating.\n",
+        )
+        assert_failure(invalid_name, "lowercase alphanumeric/hyphen")
+
+        long_name = "a" * 65
+        too_long = write_skill(
+            root,
+            long_name,
+            f"name: {long_name}\ndescription: Tests length. Use when validating.\n",
+        )
+        assert_failure(too_long, "at most 64")
+
+    print("PASS: 8 validator fixtures")
 
 
 if __name__ == "__main__":

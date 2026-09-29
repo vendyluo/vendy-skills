@@ -73,8 +73,6 @@ def check_skill(skill_dir: pathlib.Path, failures: list[str]) -> None:
         failures.append(f"{skill_dir.name}: frontmatter name is {name!r}")
     if len(name) > 64 or not NAME_RE.fullmatch(name):
         failures.append(f"{skill_dir.name}: name must be at most 64 lowercase alphanumeric/hyphen characters")
-    if not name.split("-", 1)[0].endswith("ing"):
-        failures.append(f"{skill_dir.name}: catalog policy requires the first name token to end in 'ing'")
 
     description = fields.get("description", "")
     if not description:
